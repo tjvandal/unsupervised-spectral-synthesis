@@ -10,7 +10,9 @@ VAE-GAN Architecture forr unsupervised image-to-image translation with shared sp
 
 ## Dependencies
 
-conda install pytorch, xarray, petastorm, numpy, pyhdf, scipy, pandas, torchvision 
+(Approximately)
+
+`conda install pytorch xarray petastorm numpy pyhdf scipy pandas torchvision`
 
 ## Steps to Reproduce Experiments
 
