@@ -10,16 +10,23 @@ VAE-GAN Architecture forr unsupervised image-to-image translation with shared sp
 
 ## Dependencies
 
-(Approximately)
+Python==3.7 <br>
+Pytorch==1.5 <br>
+Petastorm==0.9
 
-`conda install pytorch xarray petastorm numpy pyhdf scipy pandas torchvision`
+Note: Functionality using PyTorch with MPI requires installation from source.
+
+```
+conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml
+conda install -c conda-forge pyhdf
+pip install petastorm
+```
 
 ## Steps to Reproduce Experiments
 
 ### Data
 
 Find GOES-16/17 and Himawari-8 L1G products on the [GeoNEX dataportal](https://data.nas.nasa.gov/geonex/data.php)
-
 
 ### Build Training Datasets
 
