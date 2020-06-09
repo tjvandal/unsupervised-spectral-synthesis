@@ -16,10 +16,15 @@ VAE-GAN Architecture forr unsupervised image-to-image translation with shared sp
 
 ## Steps to Reproduce Experiments
 
+### Data
+
+Find GOES-16/17 and Himawari-8 L1G products on the [GeoNEX dataportal](https://data.nas.nasa.gov/geonex/data.php)
+
+
 ### Build Training Datasets
 
 ```
-cd data <br>
+cd data
 python write_data_to_petastorm.py /nex/datapool/geonex/public/GOES16/GEONEX-L1G/ WRITE_DIRECTORY G16 --year 2018 --max_files 100
 python write_data_to_petastorm.py /nex/datapool/geonex/public/GOES17/GEONEX-L1G/ WRITE_DIRECTORY G17 --year 2018 --max_files 100
 ```
