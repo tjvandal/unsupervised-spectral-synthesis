@@ -6,6 +6,8 @@
 
 VAE-GAN Architecture forr unsupervised image-to-image translation with shared spectral reconstruction loss. Model is trained on GOES-16/17 and Himawari-8 L1B data processed by GeoNEX. 
 
+![Network Architecture](images/image-to-image-sensors.png)
+
 ## Dependencies
 
 conda install pytorch, xarray, petastorm, numpy, pyhdf, scipy, pandas, torchvision 
