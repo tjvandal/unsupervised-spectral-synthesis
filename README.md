@@ -1,6 +1,6 @@
 # Spectral Synthesis for Satellite-to-Satellite Translation
 
-(In progress)
+(In progress) To be released after peer-review
 
 ## Model
 
@@ -17,7 +17,7 @@ Petastorm==0.9
 Note: Functionality using PyTorch with MPI requires installation from source.
 
 ```
-conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml
+conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml jupyterlab matplotlib seaborn
 conda install -c conda-forge pyhdf
 pip install petastorm
 ```
@@ -29,6 +29,8 @@ pip install petastorm
 Find GOES-16/17 and Himawari-8 L1G products on the [GeoNEX dataportal](https://data.nas.nasa.gov/geonex/data.php)
 
 ### Build Training Datasets
+
+Data is parsed from GeoNEXL1G as sub-images and stored in a petastorm database using spark. We set max_files to 100 for testing only. 
 
 ```
 cd data
