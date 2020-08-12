@@ -1,6 +1,6 @@
 # Spectral Synthesis for Satellite-to-Satellite Translation
 
-(In progress) To be released after peer-review
+(In progress)
 
 ## Model
 
@@ -60,3 +60,7 @@ Current inference examples can be found in notebooks/
 ### Known Challenges
 
 This model estimated the lower bound of log-likelihood effectively causing reduced spatial resolution. The latent space is only appoximately cycle consistent. Recent developed in invertible methods (eg. AlignFlow) solves this problem deterministically with maximum likelihood.
+
+### Acknowledgements 
+
+We acknowledge the network codes inherented from https://github.com/mingyuliutw/UNIT
