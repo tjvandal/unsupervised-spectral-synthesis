@@ -17,7 +17,7 @@ Petastorm==0.9
 Note: Functionality using PyTorch with MPI requires installation from source.
 
 ```
-conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml
+conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml jupyterlab matplotlib seaborn
 conda install -c conda-forge pyhdf
 pip install petastorm
 ```
@@ -29,6 +29,8 @@ pip install petastorm
 Find GOES-16/17 and Himawari-8 L1G products on the [GeoNEX dataportal](https://data.nas.nasa.gov/geonex/data.php)
 
 ### Build Training Datasets
+
+Data is parsed from GeoNEXL1G as sub-images and stored in a petastorm database using spark. We set max_files to 100 for testing only. 
 
 ```
 cd data
@@ -58,3 +60,7 @@ Current inference examples can be found in notebooks/
 ### Known Challenges
 
 This model estimated the lower bound of log-likelihood effectively causing reduced spatial resolution. The latent space is only appoximately cycle consistent. Recent developed in invertible methods (eg. AlignFlow) solves this problem deterministically with maximum likelihood.
+
+### Acknowledgements 
+
+We acknowledge the network codes inherented from https://github.com/mingyuliutw/UNIT
