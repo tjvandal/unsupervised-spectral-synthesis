@@ -6,12 +6,10 @@ import os
 import copy
 from torch.utils.tensorboard import SummaryWriter
 
-from models import SplitAutoEncoder, SplitGenVAE
+from models import SplitGenVAE
 from models.discriminators import Discriminators
 
 import utils
-
-
 
 class Trainer(nn.Module):
     def __init__(self, params, distribute=False, rank=0, gpu=0):
@@ -19,14 +17,15 @@ class Trainer(nn.Module):
         self.params = params
         self.checkpoint_filepath = os.path.join(params['model_path'], 'checkpoint.flownet.pth.tar')
         self.distribute = distribute
-        
+
         data_names = params['data'].keys()
-        
+
         comma_to_list = lambda arr: [int(i) for i in arr.split(',')]
         self.shared = {d: {n: comma_to_list(el) for n, el in params['data'][d]['shared'].items()} for d in data_names if 'shared' in params['data'][d]}
 
         # Set generator 
-        self.gen = SplitGenVAE(params)      
+        self.gen = SplitGenVAE(params) 
+
         # Set discriminator
         self.dis = Discriminators(params)
         
@@ -63,7 +62,6 @@ class Trainer(nn.Module):
         # Tensorboard writer
         if rank == 0:
             self.tfwriter = SummaryWriter(os.path.join(params['model_path'], 'tfsummary'))
-        
 
     def add_domain(self, name, dim):
         if self.distribute:
@@ -72,13 +70,13 @@ class Trainer(nn.Module):
         else:
             self.gen.add_domain(name, dim)
             self.dis.add_domain(name, dim)
+
         comma_to_list = lambda arr: [int(i) for i in arr.split(',')]
         curr_keys = copy.deepcopy(list(self.shared.keys()))
         self.shared[name] = {n: comma_to_list(el) for n, el in self.params['data'][name]['shared'].items()}
         for k in curr_keys:
             self.shared[k][name] = comma_to_list(self.params['data'][k]['shared'][name])
-            
-            
+
     def save_checkpoint(self):
         if self.distribute:
             state = {'global_step': self.global_step, 'gen_state': self.gen.module.state_dict(),
@@ -119,16 +117,22 @@ class Trainer(nn.Module):
 
     def gen_update(self, x_dict, log=False):
         keys = list(x_dict.keys())
-        
+
         if self.distribute:
             gen = self.gen.module
             dis = self.dis.module
         else:
             gen = self.gen
             dis = self.dis
-        
+
         z_dict = {name: gen.encode(x, name) for name, x in x_dict.items()}
-        x_recon = {name: gen.decode(z+noise, name) for name, (z, noise) in z_dict.items()}
+
+        if gen.skip_dim:
+            x_skip = {name: x[:,gen.skip_dim]  for name, x in x_dict.items()}
+        else:
+            x_skip = {name: None for name in x_dict.keys()}
+
+        x_recon = {name: gen.decode(z+noise, name, skip_x=x_skip[name]) for name, (z, noise) in z_dict.items()}
 
         key0 = keys[0]
         
@@ -157,7 +161,7 @@ class Trainer(nn.Module):
             cross_keys = list(gen.decoders.keys()) #copy.copy(keys)
             cross_keys.remove(k)
             
-            cross_recon = {kk: gen.decode(z_k + n_k, kk) for kk in cross_keys}            
+            cross_recon = {kk: gen.decode(z_k + n_k, kk, skip_x=x_skip[k]) for kk in cross_keys}            
             
             # GAN Loss
             for kk in cross_keys:
@@ -173,9 +177,9 @@ class Trainer(nn.Module):
             zk_1 = z_k
 
             for c in range(cycles):
-                xk_cycle = {kk: gen.decode(zk_1 + n_k, kk) for kk in keys}                              # decode each domain
+                xk_cycle = {kk: gen.decode(zk_1 + n_k, kk, skip_x=x_skip[k]) for kk in keys}            # decode each domain
                 z_cycle = {kk: gen.encode(_x, kk) for kk, _x in xk_cycle.items()}                       # encode back to z
-                x2_cycle = {kk: gen.decode(z_cycle[kk][0] + n_k, k) for kk in keys}                     # decode back to cross domains
+                x2_cycle = {kk: gen.decode(z_cycle[kk][0] + n_k, k, skip_x=x_skip[k]) for kk in keys}   # decode back to cross domains
 
                 cycle_recon_losses += [self.mse_loss(x_k, x2_cycle[kk]) for kk in keys]
                 cycle_zrecon_losses = [self.mse_loss(z_k, z_cycle[kk][0]) for kk in keys]
@@ -234,7 +238,7 @@ class Trainer(nn.Module):
                     self.tfwriter.add_histogram(f"channel{j}/Observed_Domain{name}", x[:,j], step)
                     self.tfwriter.add_histogram(f"channel{j}/reconstructed_Domain{name}", x_recon[name][:,j], step)
         return loss
-                    
+
     def dis_update(self, x_dict, log=False):
         if self.distribute:
             gen = self.gen.module
@@ -242,16 +246,21 @@ class Trainer(nn.Module):
         else:
             gen = self.gen
             dis = self.dis
-            
+
+        if gen.skip_dim:
+            x_skip = {name: x[:,gen.skip_dim]  for name, x in x_dict.items()}
+        else:
+            x_skip = {name: None for name in x_dict.keys()}
+
         z_dict = {name: gen.encode(x, name) for name, x in x_dict.items()}
         keys = list(x_dict.keys())
-        
+
         # for each discriminator, show it examples of true examples + all other false examples        
         dis_losses = []
         for name, x in x_dict.items():
             cross_keys = copy.copy(list(gen.decoders.keys()))
             cross_keys.remove(name)
-            x_cross = {kk: gen.decode(z_dict[kk][0] + z_dict[kk][1], name) for kk in z_dict.keys()}
+            x_cross = {kk: gen.decode(z_dict[kk][0] + z_dict[kk][1], name, skip_x=x_skip[kk]) for kk in z_dict.keys()}
             dis_losses += [dis.models[name].calc_dis_loss(xc.detach(), x_dict[name]) for kk, xc in x_cross.items()]
         
         loss_dis = torch.mean(torch.stack(dis_losses))
@@ -265,7 +274,7 @@ class Trainer(nn.Module):
             tfwriter = self.tfwriter
             tfwriter.add_scalar('losses/dis/total', loss_dis, self.global_step)
             
-            x_12 = gen.decode(z_dict[keys[0]][0], keys[1])
+            x_12 = gen.decode(z_dict[keys[0]][0], keys[1], skip_x=x_skip[keys[0]])
             for c in range(x_12.shape[1]):
                 tfwriter.add_image(f"images/cross_reconstruction/channel_{c}", utils.scale_image(x_12[0,c:c+1]),self.global_step)
                 

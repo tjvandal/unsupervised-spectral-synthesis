@@ -35,7 +35,6 @@ import train_net
 def setup(rank, world_size, port, backend='mpi'):
     host = socket.gethostname()
     print(f"Rank: {rank}    World size: {world_size}   Port: {port}, Host: {host}")
-    
     hostname = socket.gethostname()
     dist.init_process_group(backend, rank=rank, world_size=world_size)
 

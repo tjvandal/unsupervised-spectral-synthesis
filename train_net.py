@@ -4,11 +4,10 @@ Performs single node multi-gpu training
 
 Trains a VAE-GAN for with a shared spectral reconstruction loss
 Is applicable to generating virtual sensing but resolution may be lost.
-
-
 '''
 
 import os, sys
+import time
 import glob
 import argparse
 
@@ -86,6 +85,7 @@ def train_net(params, rank=None, device=None, distribute=True):
     # Load dataset
     data_generator = petastorm_reader.make_L1G_generators(params)
 
+    t0 = time.time()
     while trainer.global_step < params['max_iter']:
         try:
             for batch_idx, sample in enumerate(data_generator):
@@ -98,7 +98,8 @@ def train_net(params, rank=None, device=None, distribute=True):
 
                 if rank == 0:
                     if log:
-                        print(f"Step {trainer.global_step} -- Generator={loss_gen.item():4.4g}, Discriminator={loss_dis.item():4.4g}")
+                        tt = trainer.global_step / (time.time() - t0) * params['batch_size']
+                        print(f"Step {trainer.global_step} Examples/Second {tt} -- Generator={loss_gen.item():4.4g}, Discriminator={loss_dis.item():4.4g}")
 
                     trainer.update_step()
                     if trainer.global_step % params['checkpoint_step'] == 1:
@@ -115,7 +116,7 @@ def train_net(params, rank=None, device=None, distribute=True):
     cleanup()
 
 def run_training(params, world_size, port):
-    params['batch_size'] = params['batch_size'] // world_size
+    #params['batch_size'] = params['batch_size'] // world_size
     mp.spawn(train_net_mp,
              args=(world_size, port, params,),
              nprocs=world_size,
@@ -127,7 +128,7 @@ def main():
     parser.add_argument('--config_file', type=str)
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--world_size', type=int, default=1)
-    parser.add_argument('--port', type=int, default=9000)
+    parser.add_argument('--port', type=int, default=9002)
 
     args = parser.parse_args()
 

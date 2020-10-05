@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 
-from models import SplitAutoEncoder, SplitGenVAE
+from models import SplitGenVAE
 import utils
 
 def domain_to_domain(model, data, domain1, domain2, bands1=None, bands2=None, device=None,
@@ -51,8 +51,13 @@ def domain_to_domain(model, data, domain1, domain2, bands1=None, bands2=None, de
 
     # encode to latent space
     z, noise = model.encode(data_norm, domain1)
+    
+    skip_x = None
+    if model.skip_dim:
+        skip_x = data_norm[:,model.skip_dim]
+    
     # decode to target domain
-    estimate = model.decode(z, domain2)[0].detach().cpu().numpy() # decode to bands
+    estimate = model.decode(z, domain2, skip_x=skip_x)[0].detach().cpu().numpy() # decode to bands
     estimate = np.transpose(estimate, (1,2,0))
     # de-normalize target
     estimate = estimate * std2 + mu2
@@ -82,10 +87,11 @@ def load_model(config_file, device=None):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     params = utils.get_config(config_file)
-    model = SplitGenVAE(params)
+
+    model = SplitGenVAE(params)    
     model.to(device)
     checkpoint_path = os.path.join(params['model_path'], 'checkpoint.flownet.pth.tar')
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(checkpoint['gen_state'])
     step = checkpoint['global_step']
     print(f"Loaded model from step: {step}")

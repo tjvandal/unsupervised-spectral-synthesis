@@ -9,8 +9,7 @@ from scipy import ndimage
 import glob
 import pandas as pd
 import xarray as xr
-import geonexl1b
-import utils
+from . import geonexl1g
 from scipy import ndimage
 
 np.random.seed(0)
@@ -134,7 +133,7 @@ class MAIACPairs(object):
     def __init__(self, ahi05_path, ahi12_path):
         self.ahi05_path = ahi05_path
         self.ahi12_path = ahi12_path
-        self.ahi05 = geonexl1b.GeoNEXL1b(ahi05_path, 'AHI')
+        self.ahi05 = geonexl1g.GeoNEXL1G(ahi05_path, 'AHI')
         self.ahi12 = MAIACFiles(ahi12_path)
         
     def paired_files(self, tile=None, year=None, dayofyear=None):

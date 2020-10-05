@@ -204,10 +204,11 @@ class StyleEncoder(nn.Module):
         return self.model(x)
 
 class ContentEncoder(nn.Module):
-    def __init__(self, n_downsample, n_res, input_dim, dim, norm, activ, pad_type):
+    def __init__(self, n_downsample, n_res, input_dim, dim, norm, activ, pad_type, kernel_size=7):
         super(ContentEncoder, self).__init__()
         self.model = []
-        self.model += [Conv2dBlock(input_dim, dim, 7, 1, 3, norm=norm, activation=activ, pad_type=pad_type)]
+        pad = int((kernel_size - 1) / 2)
+        self.model += [Conv2dBlock(input_dim, dim, kernel_size, 1, pad, norm=norm, activation=activ, pad_type=pad_type)]
         # downsampling blocks
         for i in range(n_downsample):
             self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1, norm=norm, activation=activ, pad_type=pad_type)]
@@ -238,6 +239,30 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+class DecoderSkip(nn.Module):
+    def __init__(self, n_upsample, n_res, dim, output_dim, skip_dim=1, res_norm='adain', activ='relu', pad_type='zero'):
+        super(DecoderSkip, self).__init__()
+
+        self.skip_dim = skip_dim
+        
+        self.inner_model = []
+        # AdaIN residual blocks
+        self.inner_model += [ResBlocks(n_res, dim, res_norm, activ, pad_type=pad_type)]
+        # upsampling blocks
+        for i in range(n_upsample):
+            self.inner_model += [nn.Upsample(scale_factor=2),
+                           Conv2dBlock(dim, dim // 2, 3, 1, 1, norm='ln', activation=activ, pad_type=pad_type)]
+            dim //= 2
+        # use reflection padding in the last conv layer
+        #self.inner_model += [Conv2dBlock(dim, output_dim, 3, 1, 1, norm='none', activation='none', pad_type=pad_type)]
+        self.inner_model = nn.Sequential(*self.inner_model)
+        self.conv_out = Conv2dBlock(dim+len(self.skip_dim), output_dim, 3, 1, 1, norm='none', activation='none', pad_type=pad_type)
+
+    def forward(self, x, skip_x):
+        x_inner = self.inner_model(x)
+        return self.conv_out(torch.cat([x_inner, skip_x], 1))
+
 
 ##################################################################################
 # Sequential Models

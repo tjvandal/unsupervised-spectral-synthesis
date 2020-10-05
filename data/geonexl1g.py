@@ -5,7 +5,7 @@ from scipy import ndimage
 import glob
 import pandas as pd
 
-class L1bFile(object):
+class L1GFile(object):
     '''
     Reads a single L1B file at a common resolution. Channels are bilinearly interpolated to the defined resolution.
     Args:
@@ -24,7 +24,7 @@ class L1bFile(object):
 
     def load(self):
         fp = SD(self.file, SDC.READ)
-        data = np.zeros((self.resolution_size, self.resolution_size, len(self.bands)))
+        data_array = np.zeros((self.resolution_size, self.resolution_size, len(self.bands)))
         for i, b in enumerate(self.bands):
             b_obj = fp.select('BAND%02i' % b)
             attrs = b_obj.attributes()
@@ -38,9 +38,9 @@ class L1bFile(object):
             arr += offset
             if arr.shape[0] != self.resolution_size:
                 arr = ndimage.interpolation.zoom(arr, self.resolution_size/arr.shape[0], order=1)
-            data[:,:,i] = arr
-        self.data = data
-        return self.data
+            data_array[:,:,i] = arr
+        #self.data_array = data_array
+        return data_array
 
     def solar(self):
         fp = SD(self.file, SDC.READ)
@@ -48,7 +48,7 @@ class L1bFile(object):
         sz = fp.select('Solar_Zenith').get()[:]
         return sa*0.01, sz*0.01
 
-class GeoNEXL1b(object):
+class GeoNEXL1G(object):
     '''
     Get information on L1G data directory, available tiles, years, and files
         file lists are locally cached to future reading as retrieving file lists
@@ -127,7 +127,7 @@ class GeoNEXL1b(object):
         fileinfo.to_pickle(cache_file)
         return fileinfo
 
-class L1bPaired(object):
+class L1GPaired(object):
     def __init__(self, data_path1, data_path2, sensor1, sensor2):
         '''
         Retrieve lists of files that match temporally and spatially using two GeoNEXL1b objects
@@ -144,8 +144,8 @@ class L1bPaired(object):
         self.sensor1 = sensor1
         self.sensor2 = sensor2
 
-        self.data1 = GeoNEXL1b(data_path1, sensor1)
-        self.data2 = GeoNEXL1b(data_path2, sensor2)
+        self.data1 = GeoNEXL1G(data_path1, sensor1)
+        self.data2 = GeoNEXL1G(data_path2, sensor2)
 
     def tiles(self):
         tiles1 = self.data1.tiles()
@@ -174,10 +174,10 @@ class L1bPaired(object):
         files1 = self.data1.files(tile=tile, year=year, dayofyear=dayofyear, cachedir=cachedir)
         files2 = self.data2.files(tile=tile, year=year, dayofyear=dayofyear, cachedir=cachedir)
         get_timestamp = lambda x: '_'.join(os.path.basename(x).split('_')[2:4])
-        
+
         files1['timestamp'] = files1['file'].apply(get_timestamp)
         files1 = files1.set_index(['timestamp', 'tile'])
-        
+
         files2['timestamp'] = files2['file'].apply(get_timestamp)
         files2 = files2.set_index(['timestamp', 'tile'])
         joined = files1.join(files2, lsuffix='1', rsuffix='2', how=how)

@@ -2,7 +2,7 @@
 dataset: g16g17h8
 
 # Paths
-model_path:  /nobackupp10/tvandal/nex-ai-geo-translation/experiments/1/G16G17H8_16-16-16 ## where to save the model and checkpoints
+model_path: /nobackupp10/tvandal/unsupervised-spectral-synthesis/experiments/1/G16G17H8_16-16-16 ## where to save the model and checkpoints
 
 data:
     G16:
