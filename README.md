@@ -66,4 +66,4 @@ This model estimated the lower bound of log-likelihood effectively causing reduc
 
 ### Acknowledgements 
 
-We acknowledge the network codes inherented from https://github.com/mingyuliutw/UNIT
+This work was funded by the NASA Ames Research Center and NASA Earth eXchange (NEX). We acknowledge the network codes inherented from https://github.com/mingyuliutw/UNIT.
