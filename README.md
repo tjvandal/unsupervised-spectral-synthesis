@@ -1,6 +1,6 @@
 # Spectral Synthesis for Satellite-to-Satellite Translation
 
-(In progress)
+[ADD Link to TGRS paper]
 
 ## Model
 
