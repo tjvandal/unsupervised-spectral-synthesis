@@ -1,6 +1,10 @@
 # Spectral Synthesis for Satellite-to-Satellite Translation
 
-[ADD Link to TGRS paper]
+This code corresponds to the following paper:
+[https://ieeexplore.ieee.org/document/9462910](https://ieeexplore.ieee.org/document/9462910)
+
+### Citation
+Vandal, T. J., McDuff, D., Wang, W., Duffy, K., Michaelis, A., & Nemani, R. R. (2021). Spectral Synthesis for Geostationary Satellite-to-Satellite Translation. IEEE Transactions on Geoscience and Remote Sensing.
 
 ## Model
 
