@@ -24,7 +24,7 @@ Petastorm==0.9
 Note: Functionality using PyTorch with MPI requires installation from source.
 
 ```
-conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml jupyterlab matplotlib seaborn
+conda create --name geonex_torch1.5 python=3.7 pytorch=1.5 xarray numpy scipy pandas torchvision tensorboard opencv pyyaml jupyterlab matplotlib seaborn pyspark
 conda install -c conda-forge pyhdf
 pip install petastorm
 ```
