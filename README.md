@@ -39,6 +39,14 @@ Find GOES-16/17 and Himawari-8 L1G products on the [GeoNEX dataportal](https://d
 
 Data is parsed from GeoNEXL1G as sub-images and stored in a petastorm database using spark. We set max_files to 100 for testing only. 
 
+#### NEX environment
+
+```
+conda activate geonex_torch1.5
+module -a use /u/analytix/tools/modulefiles
+module load jdk/jdk8u202
+```
+
 ```
 cd data
 python write_data_to_petastorm.py /nex/datapool/geonex/public/GOES16/GEONEX-L1G/ WRITE_DIRECTORY G16 --year 2018 --max_files 100
